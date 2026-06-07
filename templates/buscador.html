@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Buscador de Productos</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; padding: 30px; }
+        .container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); max-width: 600px; margin: auto; text-align: center; }
+        input { width: 70%; padding: 10px; margin-bottom: 20px; }
+        button { padding: 10px 20px; background-color: #007BFF; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .btn-back { background-color: #6c757d; margin-top: 20px; text-decoration: none; display: inline-block; padding: 10px 20px; color: white; border-radius: 4px;}
+        .btn-exit { background-color: #dc3545; margin-top: 20px; text-decoration: none; display: inline-block; padding: 10px 20px; color: white; border-radius: 4px;}
+        #resultado { margin-top: 20px; text-align: left; background: #e9ecef; padding: 15px; border-radius: 4px; display: none; }
+        .error-msg { color: red; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>🔍 Buscador de Productos</h2>
+        <p>Ingresa el código del producto (ej. P001, P002)</p>
+        
+        <input type="text" id="codigoInput" placeholder="Código del producto...">
+        <button onclick="buscarProducto()">Buscar</button>
+
+        <div id="mensajeError" class="error-msg"></div>
+
+        <div id="resultado">
+            <h3 id="resNombre"></h3>
+            <p><strong>Descripción:</strong> <span id="resDesc"></span></p>
+            <p><strong>Precio:</strong> S/ <span id="resPrecio"></span></p>
+            <p><strong>Stock:</strong> <span id="resStock"></span> unidades</p>
+            <p><strong>Categoría:</strong> <span id="resCat"></span></p>
+        </div>
+
+        <br>
+        <a href="/principal" class="btn-back">Regresar</a>
+        <a href="/logout" class="btn-exit">Salir del Sistema</a>
+    </div>
+
+    <script>
+        async function buscarProducto() {
+            const codigo = document.getElementById('codigoInput').value.trim();
+            const divResultado = document.getElementById('resultado');
+            const msjError = document.getElementById('mensajeError');
+            
+            // Limpiar resultados anteriores
+            divResultado.style.display = 'none';
+            msjError.innerHTML = '';
+
+            if(!codigo) {
+                msjError.innerHTML = 'Por favor, ingresa un código.';
+                return;
+            }
+
+            try {
+                // Hacer petición a nuestra API en Flask
+                const response = await fetch('/api/buscar_producto', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ codigo: codigo })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Mostrar datos
+                    document.getElementById('resNombre').innerText = data.nombre + " (" + data.codigo + ")";
+                    document.getElementById('resDesc').innerText = data.descripcion;
+                    document.getElementById('resPrecio').innerText = data.precio.toFixed(2);
+                    document.getElementById('resStock').innerText = data.stock;
+                    document.getElementById('resCat').innerText = data.categoria;
+                    divResultado.style.display = 'block';
+                } else {
+                    msjError.innerHTML = data.error || 'Producto no encontrado.';
+                }
+            } catch (error) {
+                msjError.innerHTML = 'Error al conectar con el servidor.';
+                console.error(error);
+            }
+        }
+    </script>
+</body>
+</html>
